@@ -293,7 +293,7 @@ const booths: BoothData[] = [
 ];
 
 const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }) => {
-  const [playerPosition, setPlayerPosition] = useState({ x: 400, y: 300 });
+  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
   const [activeKeys, setActiveKeys] = useState<Record<string, boolean>>({});
   const [nearestBooth, setNearestBooth] = useState<string | null>(null);
   const [interactingBooth, setInteractingBooth] = useState<string | null>(null);
@@ -410,6 +410,21 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
     
     setNearestBooth(nearestId);
   }, [playerPosition]);
+
+  // Center player when game starts
+  useEffect(() => {
+    if (gameStarted && gameRef.current) {
+      const boardWidth = gameRef.current.offsetWidth;
+      const boardHeight = gameRef.current.offsetHeight;
+      const playerWidth = 32; // Player width from styled component
+      const playerHeight = 32; // Player height from styled component
+      
+      setPlayerPosition({
+        x: (boardWidth - playerWidth) / 2,
+        y: (boardHeight - playerHeight) / 2
+      });
+    }
+  }, [gameStarted]);
 
   // Add an item to inventory
   const addToInventory = (item: InventoryItem) => {

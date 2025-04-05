@@ -1,21 +1,74 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { MetaMaskSDK } from '@metamask/sdk';
 import BoothInteraction from '@components/BoothInteraction';
 import Inventory from '@components/Inventory';
 
+// Initialize MetaMask SDK
+const MMSDK = new MetaMaskSDK({
+  dappMetadata: {
+    name: "SE7EN Blockchain Carnival",
+    url: window.location.href,
+  },
+  useDeeplink: true,
+  preferDesktop: false,
+  checkInstallationImmediately: false,
+  logging: {
+    developerMode: true
+  }
+});
+
+const TopBar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+  margin-bottom: 0;
+`;
+
+const ConnectButton = styled.button`
+  background: #FF9E0D;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #F08C00;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  img {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
 const GameContainer = styled.div<{ isGameStarted: boolean }>`
-width: 100%;
-display: flex;
-flex-direction: column;
-gap: 20px;
-height: ${props => props.isGameStarted ? '100vh' : 'auto'};
-padding-top: ${props => props.isGameStarted ? '0' : '20px'};
-overflow: ${props => props.isGameStarted ? 'hidden' : 'visible'};
-position: ${props => props.isGameStarted ? 'fixed' : 'relative'};
-top: ${props => props.isGameStarted ? '0' : 'auto'};
-left: ${props => props.isGameStarted ? '0' : 'auto'};
-right: ${props => props.isGameStarted ? '0' : 'auto'};
-bottom: ${props => props.isGameStarted ? '0' : 'auto'};
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: ${props => props.isGameStarted ? 'calc(100vh - 60px)' : 'auto'};
+  padding-top: ${props => props.isGameStarted ? '0' : '20px'};
+  overflow: ${props => props.isGameStarted ? 'hidden' : 'visible'};
+  position: ${props => props.isGameStarted ? 'fixed' : 'relative'};
+  top: ${props => props.isGameStarted ? '0' : 'auto'};
+  left: ${props => props.isGameStarted ? '0' : 'auto'};
+  right: ${props => props.isGameStarted ? '0' : 'auto'};
+  bottom: ${props => props.isGameStarted ? '0' : 'auto'};
 `;
 
 const MobileControls = styled.div`
@@ -177,18 +230,19 @@ const ControlsLayout = styled.div`
 
 const GameBoard = styled.div<{ isGameStarted: boolean; isBlurred?: boolean }>`
   width: 100%;
-  height: ${(props) => props.isGameStarted ? '70vh' : '50vh'};
+  height: ${props => props.isGameStarted ? '55vh' : '50vh'};
+  max-width: 1200px;
+  margin: 0 auto;
   background-color: #88cc88;
   position: relative;
   border: 4px solid #333;
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 20px;
-  filter: ${(props) => props.isBlurred ? 'blur(5px)' : 'none'};
+  filter: ${props => props.isBlurred ? 'blur(5px)' : 'none'};
   transition: filter 0.3s ease;
 
   @media (max-width: 768px) {
-    height: calc(100vh - 160px);
+    height: calc(100vh - 250px);
     margin-bottom: 0;
   }
 `;
@@ -335,6 +389,7 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [showGameMessage, setShowGameMessage] = useState(false);
+  const [account, setAccount] = useState<string | null>(null);
 
   // Log when component mounts/unmounts and when isVerified changes
   useEffect(() => {
@@ -477,6 +532,96 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
     }, 3000);
   };
 
+  const connectWallet = async () => {
+    try {
+      let provider = MMSDK.getProvider();
+      
+      if (!provider) {
+        console.log('No provider found, initializing SDK...');
+        await MMSDK.init();
+        provider = MMSDK.getProvider();
+      }
+
+      if (!provider) {
+        setErrorMessage('MetaMask provider not found!');
+        setTimeout(() => setErrorMessage(null), 3000);
+        return;
+      }
+
+      try {
+        console.log('Requesting accounts...');
+        const accounts = await provider.request<string[]>({
+          method: 'eth_requestAccounts'
+        });
+        
+        if (accounts && accounts.length > 0 && typeof accounts[0] === 'string') {
+          const account = accounts[0];
+          console.log('Connected account:', account);
+          setAccount(account);
+          
+          // Set up event listeners
+          const handleAccountsChanged = (newAccounts: unknown) => {
+            console.log('Accounts changed:', newAccounts);
+            if (Array.isArray(newAccounts) && newAccounts.length > 0 && typeof newAccounts[0] === 'string') {
+              setAccount(newAccounts[0]);
+            } else {
+              setAccount(null);
+            }
+          };
+
+          const handleChainChanged = (_chainId: unknown) => {
+            console.log('Chain changed, reloading...');
+            window.location.reload();
+          };
+
+          provider.on('accountsChanged', handleAccountsChanged);
+          provider.on('chainChanged', handleChainChanged);
+
+          return () => {
+            provider.removeListener('accountsChanged', handleAccountsChanged);
+            provider.removeListener('chainChanged', handleChainChanged);
+          };
+        }
+      } catch (error: any) {
+        console.error('Connection error:', error);
+        if (error.code === 4001) {
+          setErrorMessage('Please approve the connection request in MetaMask.');
+        } else if (error.code === -32002) {
+          setErrorMessage('Connection request pending. Check MetaMask.');
+        } else {
+          setErrorMessage('Error connecting wallet. Please try again.');
+        }
+        setTimeout(() => setErrorMessage(null), 3000);
+      }
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
+      setErrorMessage('Error connecting wallet. Please try again.');
+      setTimeout(() => setErrorMessage(null), 3000);
+    }
+  };
+
+  // Add useEffect to check for existing connection on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+          }
+        } catch (error) {
+          console.error('Error checking wallet connection:', error);
+        }
+      }
+    };
+
+    checkConnection();
+  }, []);
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
   return (
     <GameContainer isGameStarted={gameStarted}>
       {!gameStarted ? (
@@ -488,58 +633,67 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
           <Controls>
             Use arrow keys (↑ ↓ ← →) to move around and SPACE to interact with booths
           </Controls>
-          
-          <GameBoard 
-            ref={gameRef} 
-            isGameStarted={gameStarted}
-          >
-            {showGameMessage && (
-              <GameMessage>
-                🎉 Congratulations! You've completed the Self Custody Workshop! 🎉
-              </GameMessage>
-            )}
 
-            <Player 
-              ref={playerRef}
-              style={{ top: `${playerPosition.y}px`, left: `${playerPosition.x}px` }} 
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <TopBar>
+              <ConnectButton onClick={connectWallet}>
+                {account ? formatAddress(account) : 'Connect MetaMask'}
+              </ConnectButton>
+            </TopBar>
             
-            {booths.map(booth => (
-              <Booth
-                key={booth.id}
-                id={booth.id}
-                isActive={booth.id === nearestBooth}
-                style={{ 
-                  top: booth.position.top, 
-                  left: booth.position.left 
-                }}
-                ref={el => {
-                  boothRefs.current[booth.id] = el;
-                }}
-                onClick={() => {
-                  if (booth.id === nearestBooth) {
-                    setInteractingBooth(booth.id);
-                  } else {
-                    setErrorMessage('Move closer to interact with this booth!');
-                    setTimeout(() => setErrorMessage(null), 2000);
-                  }
-                }}
-              >
-                {booth.name}
-              </Booth>
-            ))}
-          </GameBoard>
-          
-          {errorMessage && (
-            <div style={{ 
-              textAlign: 'center', 
-              color: '#ff6b6b', 
-              padding: '10px',
-              marginTop: '10px'
-            }}>
-              {errorMessage}
-            </div>
-          )}
+            <GameBoard 
+              ref={gameRef} 
+              isGameStarted={gameStarted}
+              isBlurred={!!interactingBooth}
+            >
+              {showGameMessage && (
+                <GameMessage>
+                  🎉 Congratulations! You've completed the Self Custody Workshop! 
+                </GameMessage>
+              )}
+
+              <Player 
+                ref={playerRef}
+                style={{ top: `${playerPosition.y}px`, left: `${playerPosition.x}px` }} 
+              />
+              
+              {booths.map(booth => (
+                <Booth
+                  key={booth.id}
+                  id={booth.id}
+                  isActive={booth.id === nearestBooth}
+                  style={{ 
+                    top: booth.position.top, 
+                    left: booth.position.left 
+                  }}
+                  ref={el => {
+                    boothRefs.current[booth.id] = el;
+                  }}
+                  onClick={() => {
+                    if (booth.id === nearestBooth) {
+                      setInteractingBooth(booth.id);
+                    } else {
+                      setErrorMessage('Move closer to interact with this booth!');
+                      setTimeout(() => setErrorMessage(null), 2000);
+                    }
+                  }}
+                >
+                  {booth.name}
+                </Booth>
+              ))}
+            </GameBoard>
+            
+            {errorMessage && (
+              <div style={{ 
+                textAlign: 'center', 
+                color: '#ff6b6b', 
+                padding: '10px',
+                marginTop: '10px'
+              }}>
+                {errorMessage}
+              </div>
+            )}
+          </div>
           
           {interactingBooth ? (
             <BoothInteraction

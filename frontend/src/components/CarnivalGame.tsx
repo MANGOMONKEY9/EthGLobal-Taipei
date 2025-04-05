@@ -175,7 +175,7 @@ const ControlsLayout = styled.div`
   padding: 0 20px;
 `;
 
-const GameBoard = styled.div<{ isGameStarted: boolean }>`
+const GameBoard = styled.div<{ isGameStarted: boolean; isBlurred: boolean }>`
 width: 100%;
 height: ${props => props.isGameStarted ? '70vh' : '50vh'};
 max-height: ${props => props.isGameStarted ? '800px' : '600px'};
@@ -184,6 +184,8 @@ border: 4px solid #333;
 background-color: #88cc88;
 border-radius: 10px;
 overflow: hidden;
+filter: ${props => props.isBlurred ? 'blur(3px)' : 'none'};
+transition: filter 0.3s ease;
 @media (max-width: 768px) {
   height: calc(100vh - 160px);
   margin-bottom: 0;
@@ -455,7 +457,11 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
             Use arrow keys (↑ ↓ ← →) to move around and SPACE to interact with booths
           </Controls>
           
-          <GameBoard ref={gameRef} isGameStarted={gameStarted}>
+          <GameBoard 
+            ref={gameRef} 
+            isGameStarted={gameStarted}
+            isBlurred={!!interactingBooth}
+          >
             <Player 
               ref={playerRef}
               style={{ top: `${playerPosition.y}px`, left: `${playerPosition.x}px` }} 
@@ -498,14 +504,16 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
             </div>
           )}
           
-          {interactingBooth ? (
+          {interactingBooth && (
             <BoothInteraction
               boothId={interactingBooth}
               onClose={closeInteraction}
               addToInventory={addToInventory}
               isVerified={isVerified}
             />
-          ) : (
+          )}
+
+          {!interactingBooth && (
             <>
               <Inventory items={inventory} tokenBalance={0} />
               <MobileControls>

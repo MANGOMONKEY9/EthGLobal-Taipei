@@ -25,15 +25,37 @@ const ErrorMessage = styled(StatusMessage)`
   border: 1px solid #f5c6cb;
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
 const InteractionPanel = styled.div`
-  width: 100%;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
   background-color: #ffffff;
   border: 2px solid #333;
   border-radius: 10px;
-  padding: 15px;
+  padding: 20px;
   margin: 0 auto;
-  min-height: 200px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 15px;
+    max-height: 80vh;
+  }
 `;
 
 const Header = styled.div`
@@ -519,21 +541,28 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
   };
 
   return (
-    <InteractionPanel>
-      <Header>
-        <Title>{boothContent[boothId]?.title || 'Booth Interaction'}</Title>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-      </Header>
+    <ModalOverlay onClick={(e) => {
+      // Close when clicking the overlay background
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    }}>
+      <InteractionPanel>
+        <Header>
+          <Title>{boothContent[boothId]?.title || 'Booth Interaction'}</Title>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </Header>
 
-      {renderBoothContent()}
+        {renderBoothContent()}
 
-      {statusMessage && (
-        isError ? (
-          <ErrorMessage>{statusMessage}</ErrorMessage>
-        ) : (
-          <SuccessMessage>{statusMessage}</SuccessMessage>
-        )
-      )}
-    </InteractionPanel>
+        {statusMessage && (
+          isError ? (
+            <ErrorMessage>{statusMessage}</ErrorMessage>
+          ) : (
+            <SuccessMessage>{statusMessage}</SuccessMessage>
+          )
+        )}
+      </InteractionPanel>
+    </ModalOverlay>
   );
 }

@@ -400,14 +400,35 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
     };
   }, []);
 
+  // Add disconnect function
+  const disconnectWallet = () => {
+    setAccount(null);
+    // Clean up any listeners if they exist
+    const provider = MMSDK.getProvider();
+    if (provider) {
+      provider.removeAllListeners('accountsChanged');
+      provider.removeAllListeners('chainChanged');
+    }
+  };
+
+  // Update useEffect to handle verification state
   useEffect(() => {
     console.log('[CarnivalGame] isVerified changed to:', isVerified);
     if (isVerified) {
       console.log('[CarnivalGame] Starting game...');
       setGameStarted(true);
+      // Reset wallet state when verification changes
+      setAccount(null);
+      const provider = MMSDK.getProvider();
+      if (provider) {
+        provider.removeAllListeners('accountsChanged');
+        provider.removeAllListeners('chainChanged');
+      }
     } else {
       console.log('[CarnivalGame] Stopping game...');
       setGameStarted(false);
+      // Disconnect wallet when verification expires
+      disconnectWallet();
       onVerificationExpired();
     }
   }, [isVerified, onVerificationExpired]);
@@ -600,24 +621,6 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
     }
   };
 
-  // Add useEffect to check for existing connection on mount
-  useEffect(() => {
-    const checkConnection = async () => {
-      if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-          }
-        } catch (error) {
-          console.error('Error checking wallet connection:', error);
-        }
-      }
-    };
-
-    checkConnection();
-  }, []);
-
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
@@ -636,8 +639,8 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             <TopBar>
-              <ConnectButton onClick={connectWallet}>
-                {account ? formatAddress(account) : 'Connect MetaMask'}
+              <ConnectButton onClick={account ? disconnectWallet : connectWallet}>
+                {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect MetaMask'}
               </ConnectButton>
             </TopBar>
             

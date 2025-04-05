@@ -9,7 +9,7 @@ const InventoryContainer = styled.div`
 
   @media (max-width: 768px) {
     position: fixed;
-    bottom: 180px;
+    bottom: 120px;
     left: 0;
     right: 0;
     margin: 0;
@@ -17,7 +17,7 @@ const InventoryContainer = styled.div`
     background-color: rgba(0, 0, 0, 0.85);
     border-top: 2px solid #666;
     border-bottom: none;
-    padding: 4px;
+    padding: 2px 4px;
   }
 `;
 
@@ -31,8 +31,8 @@ const InventoryHeader = styled.div`
   color: #fff;
 
   @media (max-width: 768px) {
-    margin-bottom: 2px;
-    padding-bottom: 2px;
+    margin-bottom: 1px;
+    padding-bottom: 1px;
   }
 `;
 
@@ -42,7 +42,7 @@ const Title = styled.h3`
   font-size: 16px;
 
   @media (max-width: 768px) {
-    font-size: 12px;
+    font-size: 11px;
   }
 `;
 
@@ -52,7 +52,7 @@ const TokenBalance = styled.div`
   font-size: 16px;
 
   @media (max-width: 768px) {
-    font-size: 12px;
+    font-size: 11px;
   }
 `;
 
@@ -75,8 +75,8 @@ const ItemsGrid = styled.div`
   }
 
   @media (max-width: 768px) {
-    padding: 2px;
-    gap: 2px;
+    padding: 1px;
+    gap: 1px;
   }
 `;
 
@@ -106,9 +106,9 @@ const Item = styled.div`
   }
 
   @media (max-width: 768px) {
-    min-width: 45px;
-    height: 45px;
-    padding: 3px;
+    min-width: 35px;
+    height: 35px;
+    padding: 2px;
     border-width: 1px;
   }
 `;
@@ -118,7 +118,7 @@ const ItemIcon = styled.div`
   margin-bottom: 2px;
 
   @media (max-width: 768px) {
-    font-size: 16px;
+    font-size: 14px;
     margin-bottom: 0;
   }
 `;
@@ -140,7 +140,7 @@ const ItemName = styled.div`
   }
 
   @media (max-width: 768px) {
-    font-size: 8px;
+    font-size: 7px;
     margin-bottom: 0;
   }
 `;

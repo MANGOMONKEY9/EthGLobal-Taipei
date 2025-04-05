@@ -24,7 +24,7 @@ const MobileControls = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 15px 20px;
+    padding: 8px 20px;
     background: #DFDFDF;
     position: fixed;
     bottom: 0;
@@ -39,15 +39,15 @@ const MobileControls = styled.div`
 
 const DPadContainer = styled.div`
   position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 10px;
+  width: 100px;
+  height: 100px;
+  margin: 5px;
 `;
 
 const DPad = styled.div`
   position: absolute;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   background: #444444;
   border-radius: 50%;
   display: flex;
@@ -58,8 +58,8 @@ const DPad = styled.div`
   &:before {
     content: '';
     position: absolute;
-    width: 40px;
-    height: 120px;
+    width: 35px;
+    height: 100px;
     background: #444444;
     border-radius: 5px;
   }
@@ -67,8 +67,8 @@ const DPad = styled.div`
   &:after {
     content: '';
     position: absolute;
-    width: 120px;
-    height: 40px;
+    width: 100px;
+    height: 35px;
     background: #444444;
     border-radius: 5px;
   }
@@ -76,8 +76,8 @@ const DPad = styled.div`
 
 const DPadButton = styled.button<{ direction: string }>`
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   background: #2a2a2a;
   border: none;
   cursor: pointer;
@@ -86,7 +86,7 @@ const DPadButton = styled.button<{ direction: string }>`
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
+  font-size: 16px;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   
@@ -146,13 +146,13 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled.button`
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   background: #D10000;
   border: 3px solid #8B0000;
   border-radius: 50%;
   color: white;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
   display: flex;
@@ -185,7 +185,7 @@ background-color: #88cc88;
 border-radius: 10px;
 overflow: hidden;
 @media (max-width: 768px) {
-  height: calc(100vh - 200px);
+  height: calc(100vh - 160px);
   margin-bottom: 0;
 }
 `;

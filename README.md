@@ -54,4 +54,10 @@ A blockchain-based carnival game with DeFi features.
 4. Build for production:
    ```bash
    npm run build
-   ``` 
+   ```
+5. Set up mobile server
+   ```start new terminal```
+   ```bash
+   ngrok http 3000
+   ```
+   

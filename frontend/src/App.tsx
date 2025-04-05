@@ -6,16 +6,23 @@ import { useWorldID } from '@hooks/useWorldID';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
-const AppContainer = styled.div`
+const AppContainer = styled.div<{ isVerified: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   font-family: 'Arial', sans-serif;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: ${props => props.isVerified ? '0' : '20px'};
+  height: ${props => props.isVerified ? '100vh' : 'auto'};
+  overflow: ${props => props.isVerified ? 'hidden' : 'visible'};
+  position: ${props => props.isVerified ? 'fixed' : 'relative'};
+  top: ${props => props.isVerified ? '0' : 'auto'};
+  left: ${props => props.isVerified ? '0' : 'auto'};
+  right: ${props => props.isVerified ? '0' : 'auto'};
+  bottom: ${props => props.isVerified ? '0' : 'auto'};
   @media (max-width: 768px) {
-    padding: 1rem;
+    padding: ${props => props.isVerified ? '0' : '1rem'};
   }
 `;
 
@@ -85,7 +92,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <AppContainer>
+      <AppContainer isVerified={isVerified}>
         {!isVerified && (
           <>
             <Header>

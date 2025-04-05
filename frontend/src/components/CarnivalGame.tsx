@@ -10,6 +10,12 @@ flex-direction: column;
 gap: 20px;
 height: ${props => props.isGameStarted ? '100vh' : 'auto'};
 padding-top: ${props => props.isGameStarted ? '0' : '20px'};
+overflow: ${props => props.isGameStarted ? 'hidden' : 'visible'};
+position: ${props => props.isGameStarted ? 'fixed' : 'relative'};
+top: ${props => props.isGameStarted ? '0' : 'auto'};
+left: ${props => props.isGameStarted ? '0' : 'auto'};
+right: ${props => props.isGameStarted ? '0' : 'auto'};
+bottom: ${props => props.isGameStarted ? '0' : 'auto'};
 `;
 
 const MobileControls = styled.div`
@@ -179,8 +185,8 @@ background-color: #88cc88;
 border-radius: 10px;
 overflow: hidden;
 @media (max-width: 768px) {
-  height: calc(100vh - 280px);
-  margin-bottom: 180px;
+  height: calc(100vh - 200px);
+  margin-bottom: 0;
 }
 `;
 

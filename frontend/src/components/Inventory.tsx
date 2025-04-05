@@ -178,7 +178,7 @@ const Inventory: React.FC<InventoryProps> = ({ items, tokenBalance = 0 }) => {
     <InventoryContainer>
       <InventoryHeader>
         <Title>Inventory</Title>
-        <TokenBalance>7ONE Balance: {tokenBalance.toFixed(2)}</TokenBalance>
+        <TokenBalance>SE7EN Blockchain Carnival</TokenBalance>
       </InventoryHeader>
       
       {items.length > 0 ? (

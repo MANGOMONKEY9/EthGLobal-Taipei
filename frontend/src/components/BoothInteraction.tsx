@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { ethers } from 'ethers';
 import { useDeFi } from '@hooks/useDeFi';
@@ -224,11 +224,82 @@ const Select = styled.select`
   width: 100%;
 `;
 
+const CongratulationsModal = styled(ModalOverlay)`
+  z-index: 1100;
+`;
+
+const CongratulationsContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+const CongratulationsTitle = styled.h2`
+  color: #2C5282;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+`;
+
+const CongratulationsText = styled.p`
+  color: #4A5568;
+  margin-bottom: 1.5rem;
+`;
+
+// Add Button styled component after other styled components
+const Button = styled.button`
+  background: #3B82F6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    background: #9CA3AF;
+    cursor: not-allowed;
+  }
+`;
+
+const TopCongratulations = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #4CAF50;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  z-index: 2000;
+  animation: slideDown 0.3s ease-out;
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+`;
+
 interface BoothInteractionProps {
   boothId: string;
   onClose: () => void;
   addToInventory: (item: any) => void;
   isVerified: boolean;
+  onShowCongrats?: () => void;
 }
 
 interface BoothContent {
@@ -265,7 +336,7 @@ const boothContent: BoothContent = {
   }
 };
 
-export default function BoothInteraction({ boothId, onClose, addToInventory, isVerified }: BoothInteractionProps) {
+export default function BoothInteraction({ boothId, onClose, addToInventory, isVerified, onShowCongrats }: BoothInteractionProps) {
   const [statusMessage, setStatusMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [question, setQuestion] = useState('');
@@ -279,11 +350,15 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
   const [newTokenAddress, setNewTokenAddress] = useState('');
   const [newTokenAmount, setNewTokenAmount] = useState('');
   const [usdcAmount, setUsdcAmount] = useState('');
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [showTopCongrats, setShowTopCongrats] = useState(false);
   
   const { isLoading: deFiLoading, error: deFiError, pools, fetchPools, swap7ONEFor, createCustomPool } = useDeFi();
 
   const booth = boothContent[boothId as keyof typeof boothContent];
   
+  const interactionPanelRef = useRef<HTMLDivElement>(null);
+
   const handleAskQuestion = () => {
     setAskingQuestion(true);
   };
@@ -416,6 +491,29 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
     }
   }, [boothId, fetchPools]);
   
+  const handleWorkshopComplete = () => {
+    // Add NFT to inventory
+    addToInventory({
+      id: 'self-custody-workshop-nft',
+      name: 'Self Custody Master',
+      icon: '🔐',
+      description: 'Completed the Self Custody Workshop and learned essential wallet security practices.',
+      type: 'achievement'
+    });
+
+    // Close the UI first
+    onClose();
+
+    // Tell parent to show congratulations
+    if (onShowCongrats) {
+      onShowCongrats();
+    }
+  };
+
+  const closeCongratulations = () => {
+    setShowCongratulations(false);
+  };
+
   const renderBoothContent = () => {
     switch (boothId) {
       case 'booth1':
@@ -449,8 +547,9 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
         return (
           <Content>
             <SelfCustodyWorkshop 
-              onComplete={onClose}
+              onComplete={handleWorkshopComplete}
               onAddToInventory={addToInventory}
+              panelRef={interactionPanelRef}
             />
           </Content>
         );
@@ -541,28 +640,47 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
   };
 
   return (
-    <ModalOverlay onClick={(e) => {
-      // Close when clicking the overlay background
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    }}>
-      <InteractionPanel>
-        <Header>
-          <Title>{boothContent[boothId]?.title || 'Booth Interaction'}</Title>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </Header>
+    <>
+      {showTopCongrats && (
+        <TopCongratulations>
+          🎉 Congratulations! You've completed the Self Custody Workshop! 🎉
+        </TopCongratulations>
+      )}
 
-        {renderBoothContent()}
+      <ModalOverlay onClick={onClose}>
+        <InteractionPanel 
+          ref={interactionPanelRef}
+          onClick={e => e.stopPropagation()}
+        >
+          <Header>
+            <Title>{boothContent[boothId]?.title || 'Booth Interaction'}</Title>
+            <CloseButton onClick={onClose}>&times;</CloseButton>
+          </Header>
 
-        {statusMessage && (
-          isError ? (
-            <ErrorMessage>{statusMessage}</ErrorMessage>
-          ) : (
-            <SuccessMessage>{statusMessage}</SuccessMessage>
-          )
-        )}
-      </InteractionPanel>
-    </ModalOverlay>
+          {renderBoothContent()}
+
+          {statusMessage && (
+            isError ? (
+              <ErrorMessage>{statusMessage}</ErrorMessage>
+            ) : (
+              <SuccessMessage>{statusMessage}</SuccessMessage>
+            )
+          )}
+        </InteractionPanel>
+      </ModalOverlay>
+
+      {showCongratulations && (
+        <CongratulationsModal onClick={closeCongratulations}>
+          <CongratulationsContent onClick={e => e.stopPropagation()}>
+            <CongratulationsTitle>🎉 Congratulations! 🎉</CongratulationsTitle>
+            <CongratulationsText>
+              You've successfully completed the Self Custody Workshop and earned your achievement NFT!
+              Keep practicing these security principles to protect your digital assets.
+            </CongratulationsText>
+            <Button onClick={closeCongratulations}>Close</Button>
+          </CongratulationsContent>
+        </CongratulationsModal>
+      )}
+    </>
   );
 }

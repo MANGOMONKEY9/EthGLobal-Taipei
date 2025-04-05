@@ -175,21 +175,22 @@ const ControlsLayout = styled.div`
   padding: 0 20px;
 `;
 
-const GameBoard = styled.div<{ isGameStarted: boolean; isBlurred: boolean }>`
-width: 100%;
-height: ${props => props.isGameStarted ? '70vh' : '50vh'};
-max-height: ${props => props.isGameStarted ? '800px' : '600px'};
-position: relative;
-border: 4px solid #333;
-background-color: #88cc88;
-border-radius: 10px;
-overflow: hidden;
-filter: ${props => props.isBlurred ? 'blur(3px)' : 'none'};
-transition: filter 0.3s ease;
-@media (max-width: 768px) {
-  height: calc(100vh - 160px);
-  margin-bottom: 0;
-}
+const GameBoard = styled.div<{ isGameStarted: boolean; isBlurred?: boolean }>`
+  width: 100%;
+  height: ${(props) => props.isGameStarted ? '70vh' : '50vh'};
+  background-color: #88cc88;
+  position: relative;
+  border: 4px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  filter: ${(props) => props.isBlurred ? 'blur(5px)' : 'none'};
+  transition: filter 0.3s ease;
+
+  @media (max-width: 768px) {
+    height: calc(100vh - 160px);
+    margin-bottom: 0;
+  }
 `;
 
 const Player = styled.div`
@@ -242,6 +243,29 @@ font-style: italic;
 @media (max-width: 768px) {
   display: none;
 }
+`;
+
+const GameMessage = styled.div`
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4CAF50;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-align: center;
+  z-index: 100;
+  animation: fadeInOut 3s ease-in-out forwards;
+
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    15% { opacity: 1; transform: translate(-50%, 0); }
+    85% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+  }
 `;
 
 interface GameProps {
@@ -310,6 +334,7 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [showGameMessage, setShowGameMessage] = useState(false);
 
   // Log when component mounts/unmounts and when isVerified changes
   useEffect(() => {
@@ -445,6 +470,13 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
     setInteractingBooth(null);
   };
 
+  const handleShowCongrats = () => {
+    setShowGameMessage(true);
+    setTimeout(() => {
+      setShowGameMessage(false);
+    }, 3000);
+  };
+
   return (
     <GameContainer isGameStarted={gameStarted}>
       {!gameStarted ? (
@@ -460,8 +492,13 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
           <GameBoard 
             ref={gameRef} 
             isGameStarted={gameStarted}
-            isBlurred={!!interactingBooth}
           >
+            {showGameMessage && (
+              <GameMessage>
+                🎉 Congratulations! You've completed the Self Custody Workshop! 🎉
+              </GameMessage>
+            )}
+
             <Player 
               ref={playerRef}
               style={{ top: `${playerPosition.y}px`, left: `${playerPosition.x}px` }} 
@@ -504,16 +541,15 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
             </div>
           )}
           
-          {interactingBooth && (
+          {interactingBooth ? (
             <BoothInteraction
               boothId={interactingBooth}
               onClose={closeInteraction}
               addToInventory={addToInventory}
               isVerified={isVerified}
+              onShowCongrats={handleShowCongrats}
             />
-          )}
-
-          {!interactingBooth && (
+          ) : (
             <>
               <Inventory items={inventory} tokenBalance={0} />
               <MobileControls>

@@ -119,12 +119,12 @@ interface WorkshopStep {
 interface SelfCustodyWorkshopProps {
     onComplete?: () => void;
     onAddToInventory?: (item: any) => void;
+    panelRef?: React.RefObject<HTMLDivElement>;
 }
 
-const SelfCustodyWorkshop: React.FC<SelfCustodyWorkshopProps> = ({ onComplete, onAddToInventory }) => {
+const SelfCustodyWorkshop: React.FC<SelfCustodyWorkshopProps> = ({ onComplete, onAddToInventory, panelRef }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [seedPhrase, setSeedPhrase] = useState<string>('');
-    const [isWorkshopCompleted, setIsWorkshopCompleted] = useState(false);
 
     const generateSeedPhrase = async () => {
         try {
@@ -214,6 +214,11 @@ const SelfCustodyWorkshop: React.FC<SelfCustodyWorkshopProps> = ({ onComplete, o
     ];
 
     const nextStep = () => {
+        // Reset scroll position of the parent modal
+        if (panelRef?.current) {
+            panelRef.current.scrollTop = 0;
+        }
+
         if (currentStep < workshopSteps.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
@@ -222,25 +227,10 @@ const SelfCustodyWorkshop: React.FC<SelfCustodyWorkshopProps> = ({ onComplete, o
     };
 
     const completeWorkshop = () => {
-        // Add NFT to inventory
-        if (onAddToInventory) {
-            onAddToInventory({
-                id: 'self-custody-workshop-nft',
-                name: 'Self Custody Master',
-                icon: '🔐',
-                description: 'Completed the Self Custody Workshop and learned essential wallet security practices.',
-                type: 'achievement'
-            });
+        // Just call onComplete immediately
+        if (onComplete) {
+            onComplete();
         }
-
-        setIsWorkshopCompleted(true);
-
-        // Close the booth after a short delay to show completion message
-        setTimeout(() => {
-            if (onComplete) {
-                onComplete();
-            }
-        }, 2000);
     };
 
     const progress = ((currentStep + 1) / workshopSteps.length) * 100;
@@ -275,16 +265,6 @@ const SelfCustodyWorkshop: React.FC<SelfCustodyWorkshopProps> = ({ onComplete, o
             >
                 {currentStep < workshopSteps.length - 1 ? "Next Step" : "Complete Workshop"}
             </Button>
-
-            {isWorkshopCompleted && (
-                <StepContainer>
-                    <StepTitle>Workshop Completed! 🎉</StepTitle>
-                    <TipContent>
-                        Congratulations! You've learned the essentials of self-custody. 
-                        A completion NFT has been added to your inventory.
-                    </TipContent>
-                </StepContainer>
-            )}
         </WorkshopContainer>
     );
 };

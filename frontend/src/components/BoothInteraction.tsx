@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { ethers } from 'ethers';
 import { useDeFi } from '@hooks/useDeFi';
+import SelfCustodyWorkshop from './SelfCustodyWorkshop';
 
 const StatusMessage = styled.div`
   margin-top: 10px;
@@ -208,7 +209,14 @@ interface BoothInteractionProps {
   isVerified: boolean;
 }
 
-const boothContent = {
+interface BoothContent {
+  [key: string]: {
+    title: string;
+    description: string;
+  };
+}
+
+const boothContent: BoothContent = {
   booth1: {
     title: "Fireside Chat: Decentralisation & Trustlessness",
     description: "Welcome to the Decentralisation & Trustlessness Fireside Chat! You see 20 people in the audience and 4 speakers on stage discussing decentralized systems."
@@ -386,209 +394,146 @@ export default function BoothInteraction({ boothId, onClose, addToInventory, isV
     }
   }, [boothId, fetchPools]);
   
-  return (
-    <InteractionPanel>
-      <Header>
-        <Title>{booth.title}</Title>
-        <CloseButton onClick={onClose}>×</CloseButton>
-      </Header>
-      
-      <Content>
-        <p>{booth.description}</p>
-        
-        {boothId === 'booth1' || boothId === 'booth5' ? (
-          <>
-            <ActionButton onClick={handleAskQuestion}>Ask a Question</ActionButton>
-            
-            {askingQuestion && (
+  const renderBoothContent = () => {
+    switch (boothId) {
+      case 'booth1':
+        return (
+          <Content>
+            <p>{boothContent.booth1.description}</p>
+            {!askingQuestion ? (
+              <ActionButton onClick={handleAskQuestion}>Ask a Question</ActionButton>
+            ) : (
               <>
-                <TextArea 
-                  placeholder="Type your question here..." 
+                <TextArea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Type your question here..."
                 />
                 <ActionButton onClick={handleSubmitQuestion}>Submit Question</ActionButton>
               </>
             )}
-          </>
-        ) : boothId === 'booth2' ? (
-          <ActionButton onClick={handleScanQR}>Scan QR Code</ActionButton>
-        ) : boothId === 'booth3' ? (
-          <>
-            <ActionButton onClick={handleGenerateSeed}>Generate Seed Phrase</ActionButton>
-            
-            {showSeedPhrase && (
-              <>
-                <p>Your seed phrase (Keep these words safe and never share them!):</p>
-                <SeedPhraseContainer>
-                  {seedPhrase.map((word, index) => (
-                    <SeedWord key={index}>{index + 1}. {word}</SeedWord>
-                  ))}
-                </SeedPhraseContainer>
-                <ActionButton onClick={handleSaveSeed}>Save to Inventory</ActionButton>
-              </>
+          </Content>
+        );
+
+      case 'booth2':
+        return (
+          <Content>
+            <p>{boothContent.booth2.description}</p>
+            <ActionButton onClick={handleScanQR}>Scan QR Code</ActionButton>
+          </Content>
+        );
+
+      case 'booth3':
+        return (
+          <Content>
+            <SelfCustodyWorkshop 
+              onComplete={onClose}
+              onAddToInventory={addToInventory}
+            />
+          </Content>
+        );
+
+      case 'booth4':
+        return (
+          <Content>
+            <p>{boothContent.booth4.description}</p>
+            <DeFiTabContainer>
+              <DeFiTab
+                active={activeTab === 'swap'}
+                onClick={() => setActiveTab('swap')}
+              >
+                Swap
+              </DeFiTab>
+              <DeFiTab
+                active={activeTab === 'pool'}
+                onClick={() => setActiveTab('pool')}
+              >
+                Create Pool
+              </DeFiTab>
+            </DeFiTabContainer>
+
+            {activeTab === 'swap' ? (
+              <SwapForm onSubmit={handleDeFiSwap}>
+                <TokenInput>
+                  <TokenAmount>
+                    <TokenLabel>Amount</TokenLabel>
+                    <Input
+                      type="number"
+                      value={swapAmount}
+                      onChange={(e) => setSwapAmount(e.target.value)}
+                      placeholder="0.0"
+                    />
+                  </TokenAmount>
+                  <Select
+                    value={selectedToken}
+                    onChange={(e) => setSelectedToken(e.target.value)}
+                  >
+                    <option value="USDC">USDC</option>
+                    <option value="ETH">ETH</option>
+                    <option value="SEVEN">SEVEN</option>
+                  </Select>
+                </TokenInput>
+                <ActionButton type="submit">Swap</ActionButton>
+              </SwapForm>
+            ) : (
+              <SwapForm onSubmit={handleDeFiCreatePool}>
+                <TokenInput>
+                  <Input
+                    value={newTokenAddress}
+                    onChange={(e) => setNewTokenAddress(e.target.value)}
+                    placeholder="Token Address"
+                  />
+                  <Input
+                    type="number"
+                    value={newTokenAmount}
+                    onChange={(e) => setNewTokenAmount(e.target.value)}
+                    placeholder="Amount"
+                  />
+                </TokenInput>
+                <ActionButton type="submit">Create Pool</ActionButton>
+              </SwapForm>
             )}
-          </>
-        ) : boothId === 'booth4' ? (
-          <>
-            <div>
-              <h3>DeFi Workshop</h3>
-              <p>Welcome to the DeFi Workshop! Here you can swap tokens and manage liquidity pools.</p>
-              
-              <DeFiTabContainer>
-                <DeFiTab 
-                  active={activeTab === 'swap'} 
-                  onClick={() => setActiveTab('swap')}
-                >
-                  Swap Tokens
-                </DeFiTab>
-                <DeFiTab 
-                  active={activeTab === 'pools'} 
-                  onClick={() => setActiveTab('pools')}
-                >
-                  View Pools
-                </DeFiTab>
-                <DeFiTab 
-                  active={activeTab === 'create'} 
-                  onClick={() => setActiveTab('create')}
-                >
-                  Create Pool
-                </DeFiTab>
-              </DeFiTabContainer>
+          </Content>
+        );
 
-              {activeTab === 'swap' && (
-                <SwapForm onSubmit={handleDeFiSwap}>
-                  <TokenInput>
-                    <TokenAmount>
-                      <TokenLabel>From (7ONE)</TokenLabel>
-                      <Input
-                        type="number"
-                        placeholder="Amount"
-                        value={swapAmount}
-                        onChange={(e) => setSwapAmount(e.target.value)}
-                      />
-                      <TokenBalance>Available: 100 7ONE</TokenBalance>
-                    </TokenAmount>
-                  </TokenInput>
-
-                  <SwapArrow>↓</SwapArrow>
-
-                  <TokenInput>
-                    <TokenAmount>
-                      <TokenLabel>To</TokenLabel>
-                      <Select
-                        value={selectedToken}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedToken(e.target.value)}
-                      >
-                        <option value="USDC">USDC</option>
-                        <option value="ETH">ETH</option>
-                      </Select>
-                    </TokenAmount>
-                  </TokenInput>
-
-                  <ActionButton 
-                    type="submit" 
-                    disabled={deFiLoading || !swapAmount || Number(swapAmount) <= 0}
-                  >
-                    {deFiLoading ? 'Swapping...' : 'Swap Tokens'}
-                  </ActionButton>
-                </SwapForm>
-              )}
-
-              {activeTab === 'pools' && (
-                <PoolsDisplay>
-                  <h4>Available Liquidity Pools</h4>
-                  {pools?.length > 0 ? (
-                    pools.map((pool, index) => (
-                      <Pool key={index}>
-                        <div>
-                          {pool.token0Symbol} - {pool.token1Symbol}
-                        </div>
-                        <div>Liquidity: {pool.liquidity ? parseFloat(pool.liquidity).toFixed(2) : '0.00'}</div>
-                      </Pool>
-                    ))
-                  ) : (
-                    <p>No pools available</p>
-                  )}
-                </PoolsDisplay>
-              )}
-
-              {activeTab === 'create' && (
-                <SwapForm onSubmit={handleDeFiCreatePool}>
-                  <h4>Create New Pool with USDC</h4>
-                  <TokenInput>
-                    <TokenAmount>
-                      <TokenLabel>Token Address</TokenLabel>
-                      <Input
-                        type="text"
-                        placeholder="Enter token address"
-                        value={newTokenAddress}
-                        onChange={(e) => setNewTokenAddress(e.target.value)}
-                      />
-                    </TokenAmount>
-                  </TokenInput>
-
-                  <TokenInput>
-                    <TokenAmount>
-                      <TokenLabel>Token Amount</TokenLabel>
-                      <Input
-                        type="number"
-                        placeholder="Amount of your token"
-                        value={newTokenAmount}
-                        onChange={(e) => setNewTokenAmount(e.target.value)}
-                      />
-                    </TokenAmount>
-                  </TokenInput>
-
-                  <TokenInput>
-                    <TokenAmount>
-                      <TokenLabel>USDC Amount</TokenLabel>
-                      <Input
-                        type="number"
-                        placeholder="Amount of USDC"
-                        value={usdcAmount}
-                        onChange={(e) => setUsdcAmount(e.target.value)}
-                      />
-                    </TokenAmount>
-                  </TokenInput>
-
-                  <ActionButton 
-                    type="submit"
-                    disabled={deFiLoading || !newTokenAddress || !newTokenAmount || !usdcAmount}
-                  >
-                    {deFiLoading ? 'Creating...' : 'Create Pool'}
-                  </ActionButton>
-                </SwapForm>
-              )}
-
-              {(statusMessage || deFiError) && (
-                isError ? (
-                  <ErrorMessage>{statusMessage || deFiError}</ErrorMessage>
-                ) : (
-                  <SuccessMessage>{statusMessage}</SuccessMessage>
-                )
-              )}
-            </div>
-          </>
-        ) : boothId === 'booth6' ? (
-          <>
-            <p>Create your own token:</p>
+      case 'booth6':
+        return (
+          <Content>
+            <p>{boothContent.booth6.description}</p>
             <Input
-              type="text"
-              placeholder="Enter token name"
               value={tokenName}
               onChange={(e) => setTokenName(e.target.value)}
+              placeholder="Token Name"
             />
             <ActionButton onClick={handleCreateToken}>Create Token</ActionButton>
-          </>
-        ) : null}
+          </Content>
+        );
 
-        {statusMessage && (
-          <StatusMessage style={{ color: isError ? '#e53e3e' : '#38a169' }}>
-            {statusMessage}
-          </StatusMessage>
-        )}
-      </Content>
+      default:
+        return (
+          <Content>
+            <p>Select a booth to interact with.</p>
+          </Content>
+        );
+    }
+  };
+
+  return (
+    <InteractionPanel>
+      <Header>
+        <Title>{boothContent[boothId]?.title || 'Booth Interaction'}</Title>
+        <CloseButton onClick={onClose}>&times;</CloseButton>
+      </Header>
+
+      {renderBoothContent()}
+
+      {statusMessage && (
+        isError ? (
+          <ErrorMessage>{statusMessage}</ErrorMessage>
+        ) : (
+          <SuccessMessage>{statusMessage}</SuccessMessage>
+        )
+      )}
     </InteractionPanel>
   );
 }

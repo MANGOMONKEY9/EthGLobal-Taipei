@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract SelfCustodyWorkshop is ERC721, ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+contract SelfCustodyWorkshop is ERC721URIStorage, Ownable {
+    uint256 private _nextTokenId;
 
     // Mapping to track if a user has completed the workshop
     mapping(address => bool) public hasCompletedWorkshop;
@@ -22,7 +20,7 @@ contract SelfCustodyWorkshop is ERC721, ERC721URIStorage, Ownable {
     // NFT claim event
     event NFTClaimed(address indexed user, uint256 tokenId);
 
-    constructor() ERC721("Self Custody Workshop", "SCW") {}
+    constructor() ERC721("Self Custody Workshop", "SCW") Ownable(msg.sender) {}
 
     // Function to mark workshop as completed for a user
     function completeWorkshop() external {
@@ -42,25 +40,14 @@ contract SelfCustodyWorkshop is ERC721, ERC721URIStorage, Ownable {
         require(hasCompletedWorkshop[msg.sender], "Must complete workshop first");
         require(!hasClaimedNFT[msg.sender], "NFT already claimed");
 
-        _tokenIds.increment();
-        uint256 newTokenId = _tokenIds.current();
-
-        _safeMint(msg.sender, newTokenId);
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
         
         // Set token URI - this would point to the metadata JSON
-        _setTokenURI(newTokenId, "ipfs://YOUR_METADATA_CID");
+        _setTokenURI(tokenId, "ipfs://YOUR_METADATA_CID");
 
         hasClaimedNFT[msg.sender] = true;
-        emit NFTClaimed(msg.sender, newTokenId);
-    }
-
-    // Override required functions
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
-    }
-
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
+        emit NFTClaimed(msg.sender, tokenId);
     }
 
     // Admin function to set token URI if needed

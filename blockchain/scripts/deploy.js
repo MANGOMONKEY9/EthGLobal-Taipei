@@ -4,9 +4,16 @@ async function main() {
   // Deploy SimpleTokenSwap
   const SimpleTokenSwap = await hre.ethers.getContractFactory("SimpleTokenSwap");
   const simpleTokenSwap = await SimpleTokenSwap.deploy();
-  await simpleTokenSwap.deployed();
+  await simpleTokenSwap.waitForDeployment();
 
-  console.log("SimpleTokenSwap deployed to:", simpleTokenSwap.address);
+  console.log("SimpleTokenSwap deployed to:", await simpleTokenSwap.getAddress());
+
+  // Deploy SelfCustodyWorkshop
+  const SelfCustodyWorkshop = await hre.ethers.getContractFactory("SelfCustodyWorkshop");
+  const selfCustodyWorkshop = await SelfCustodyWorkshop.deploy();
+  await selfCustodyWorkshop.waitForDeployment();
+
+  console.log("SelfCustodyWorkshop deployed to:", await selfCustodyWorkshop.getAddress());
 }
 
 main()

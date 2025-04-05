@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SimpleTokenSwap is ReentrancyGuard, Ownable {
@@ -50,7 +51,7 @@ contract SimpleTokenSwap is ReentrancyGuard, Ownable {
         uint8 decimals
     );
 
-    constructor() {}
+    constructor() Ownable(msg.sender) {}
 
     function getTokenDecimals(address token) public view returns (uint8) {
         if (token == USDC_ADDRESS) return USDC_DECIMALS;
@@ -103,7 +104,7 @@ contract SimpleTokenSwap is ReentrancyGuard, Ownable {
         require(!customPools[token].exists, "Pool already exists");
 
         // Get token decimals
-        IERC20 tokenContract = IERC20(token);
+        IERC20Metadata tokenContract = IERC20Metadata(token);
         uint8 decimals;
         try tokenContract.decimals() returns (uint8 dec) {
             decimals = dec;

@@ -86,19 +86,23 @@ function App() {
   return (
     <ErrorBoundary>
       <AppContainer>
-        <Header>
-          <Title>SE7EN Blockchain Carnival</Title>
-          <Subtitle>Learn blockchain concepts through interactive booths</Subtitle>
-        </Header>
+        {!isVerified && (
+          <>
+            <Header>
+              <Title>SE7EN Blockchain Carnival</Title>
+              <Subtitle>Learn blockchain concepts through interactive booths</Subtitle>
+            </Header>
 
-        <WorldIDVerification 
-          onSuccess={(result) => {
-            console.log('Verification result:', result);
-            handleVerification(result);
-          }}
-          onError={handleError}
-          isVerified={isVerified}
-        />
+            <WorldIDVerification 
+              onSuccess={(result) => {
+                console.log('Verification result:', result);
+                handleVerification(result);
+              }}
+              onError={handleError}
+              isVerified={isVerified}
+            />
+          </>
+        )}
 
         <CarnivalGame 
           isVerified={isVerified}

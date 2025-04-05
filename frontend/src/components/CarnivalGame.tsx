@@ -3,11 +3,13 @@ import styled from 'styled-components';
 import BoothInteraction from '@components/BoothInteraction';
 import Inventory from '@components/Inventory';
 
-const GameContainer = styled.div`
+const GameContainer = styled.div<{ isGameStarted: boolean }>`
 width: 100%;
 display: flex;
 flex-direction: column;
 gap: 20px;
+height: ${props => props.isGameStarted ? '100vh' : 'auto'};
+padding-top: ${props => props.isGameStarted ? '0' : '20px'};
 `;
 
 const MobileControls = styled.div`
@@ -167,10 +169,10 @@ const ControlsLayout = styled.div`
   padding: 0 20px;
 `;
 
-const GameBoard = styled.div`
+const GameBoard = styled.div<{ isGameStarted: boolean }>`
 width: 100%;
-height: 50vh;
-max-height: 600px;
+height: ${props => props.isGameStarted ? '70vh' : '50vh'};
+max-height: ${props => props.isGameStarted ? '800px' : '600px'};
 position: relative;
 border: 4px solid #333;
 background-color: #88cc88;
@@ -436,7 +438,7 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
   };
 
   return (
-    <GameContainer>
+    <GameContainer isGameStarted={gameStarted}>
       {!gameStarted ? (
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
           <p>Please verify with World ID to play.</p>
@@ -447,7 +449,7 @@ const CarnivalGame: React.FC<GameProps> = ({ isVerified, onVerificationExpired }
             Use arrow keys (↑ ↓ ← →) to move around and SPACE to interact with booths
           </Controls>
           
-          <GameBoard ref={gameRef}>
+          <GameBoard ref={gameRef} isGameStarted={gameStarted}>
             <Player 
               ref={playerRef}
               style={{ top: `${playerPosition.y}px`, left: `${playerPosition.x}px` }} 
